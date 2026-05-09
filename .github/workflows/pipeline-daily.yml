@@ -1,0 +1,36 @@
+name: pipeline-daily
+
+on:
+  schedule:
+    # 06:00 UTC daily
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: pipeline-daily
+  cancel-in-progress: true
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      OPENWEATHER_KEY: ${{ secrets.OPENWEATHER_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      # Wired up in Slice 5 / 7
+      # - run: python tools/fetch_weather_ports.py
+      # - run: python tools/fetch_gdelt_disruptions.py
+      # - run: python tools/fetch_bog_fx.py
+      # - run: python tools/prune_retention.py
+      - run: echo "no daily jobs registered yet"
