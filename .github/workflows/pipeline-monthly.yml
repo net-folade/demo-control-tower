@@ -28,7 +28,8 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      # Wired up in Slice 1 / 2
-      # - run: python tools/fetch_pink_sheet.py
+      - name: Refresh commodity prices (World Bank Pink Sheet)
+        run: python tools/fetch_pink_sheet.py
+
+      # Wired up in Slice 2
       # - run: python tools/fetch_comtrade_monthly.py
-      - run: echo "no monthly jobs registered yet"
