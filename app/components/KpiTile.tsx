@@ -6,9 +6,10 @@ type KpiTileProps = {
   unit?: string;
   pctChange: number | null;
   sparkline?: SparkPoint[] | null;
+  footnote?: string;
 };
 
-export function KpiTile({ label, value, unit, pctChange, sparkline }: KpiTileProps) {
+export function KpiTile({ label, value, unit, pctChange, sparkline, footnote }: KpiTileProps) {
   const arrow = pctChange === null ? "" : pctChange > 0 ? "▲" : pctChange < 0 ? "▼" : "■";
   const trendColor =
     pctChange === null
@@ -34,6 +35,9 @@ export function KpiTile({ label, value, unit, pctChange, sparkline }: KpiTilePro
         <span className="text-neutral-600">vs prior</span>
       </div>
       {sparkline && sparkline.length > 1 && <Sparkline points={sparkline} />}
+      {footnote && (
+        <p className="text-[10px] text-neutral-600 font-mono leading-tight">{footnote}</p>
+      )}
     </div>
   );
 }
