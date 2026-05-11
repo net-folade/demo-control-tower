@@ -1,5 +1,8 @@
 import { CommodityPriceChart } from "@/components/CommodityPriceChart";
 import { KpiTile } from "@/components/KpiTile";
+import { PortActivityChart, type PortActivityRow } from "@/components/PortActivityChart";
+import type { PortBadge } from "@/components/PortLocationsMap";
+import { PortLocationsMapSection } from "@/components/PortLocationsMapSection";
 import { TradePartnersChart } from "@/components/TradePartnersChart";
 import { supabase } from "@/lib/supabase";
 
@@ -35,6 +38,17 @@ type PartnerRow = {
   share_pct: number;
 };
 
+type PortStatsLatestRow = {
+  port_code: "TEMA" | "TAKORADI";
+  metric: string;
+  year: number;
+  value: number;
+  unit: string | null;
+  prior_year_value: number | null;
+  pct_change_yoy: number | null;
+  sparkline_10y: SparkPoint[] | null;
+};
+
 export const revalidate = 0;
 
 const compact = new Intl.NumberFormat(undefined, {
@@ -45,7 +59,15 @@ const compact = new Intl.NumberFormat(undefined, {
 export default async function Home() {
   const client = supabase();
 
-  const [latestRes, cocoaHistoryRes, kpiRes, partnersRes, tradeLatestRes] = await Promise.all([
+  const [
+    latestRes,
+    cocoaHistoryRes,
+    kpiRes,
+    partnersRes,
+    tradeLatestRes,
+    portStatsLatestRes,
+    portActivityRes,
+  ] = await Promise.all([
     client
       .from("v_commodity_price_latest")
       .select(
@@ -69,6 +91,14 @@ export default async function Home() {
       .eq("hs_code", "TOTAL")
       .order("period", { ascending: false })
       .limit(1),
+    client
+      .from("v_port_stats_latest")
+      .select(
+        "port_code, metric, year, value, unit, prior_year_value, pct_change_yoy, sparkline_10y",
+      ),
+    client
+      .from("v_port_activity")
+      .select("port_code, year, metric, value, unit"),
   ]);
 
   const latest = (latestRes.data ?? []) as LatestPriceRow[];
@@ -77,6 +107,27 @@ export default async function Home() {
   const kpis = (kpiRes.data ?? []) as KpiRow[];
   const tradeYtd = kpis.find((k) => k.metric === "trade_value_ytd") ?? null;
   const partners = (partnersRes.data ?? []) as PartnerRow[];
+  const portStatsLatest = (portStatsLatestRes.data ?? []) as PortStatsLatestRow[];
+  const portActivity = (portActivityRes.data ?? []) as PortActivityRow[];
+
+  const findStat = (port: "TEMA" | "TAKORADI", metric: string) =>
+    portStatsLatest.find((s) => s.port_code === port && s.metric === metric) ?? null;
+  const temaVesselCalls = findStat("TEMA", "vessel_calls");
+  const temaCargo = findStat("TEMA", "cargo_tonnes");
+
+  const portBadges: PortBadge[] = (["TEMA", "TAKORADI"] as const).map((p) => {
+    const vc = findStat(p, "vessel_calls");
+    const cg = findStat(p, "cargo_tonnes");
+    return {
+      port_code: p,
+      name: p,
+      lat: 0,
+      lng: 0,
+      vessel_calls_latest: vc?.value ?? null,
+      cargo_tonnes_latest: cg?.value ?? null,
+      year: vc?.year ?? cg?.year ?? null,
+    };
+  });
 
   const tradeLatestPeriod = (tradeLatestRes.data?.[0]?.period as string | undefined) ?? null;
   const tradeWindow = tradeLatestPeriod
@@ -109,6 +160,21 @@ export default async function Home() {
 
       <section className="flex flex-wrap gap-4">
         <KpiTile
+          label={`Tema vessel calls (${temaVesselCalls?.year ?? "—"})`}
+          value={temaVesselCalls ? compact.format(Number(temaVesselCalls.value)) : "—"}
+          unit="calls"
+          pctChange={temaVesselCalls?.pct_change_yoy ?? null}
+          sparkline={temaVesselCalls?.sparkline_10y ?? null}
+          footnote="GPHA Annual · 2014–2024"
+        />
+        <KpiTile
+          label={`Tema cargo throughput (${temaCargo?.year ?? "—"})`}
+          value={temaCargo ? `${compact.format(Number(temaCargo.value))} t` : "—"}
+          pctChange={temaCargo?.pct_change_yoy ?? null}
+          sparkline={temaCargo?.sparkline_10y ?? null}
+          footnote="GPHA Annual · 2014–2024"
+        />
+        <KpiTile
           label="Cocoa price"
           value={formatPrice(cocoaLatest?.price_usd ?? null)}
           unit={cocoaLatest?.unit ?? undefined}
@@ -127,6 +193,25 @@ export default async function Home() {
           footnote={tradeWindow}
         />
       </section>
+
+      {portStatsLatest.length > 0 && (
+        <PortLocationsMapSection badges={portBadges} />
+      )}
+
+      {portActivity.length > 0 ? (
+        <PortActivityChart rows={portActivity} />
+      ) : (
+        <section className="rounded-lg border border-neutral-800 bg-neutral-900/50 px-6 py-5">
+          <p className="text-amber-400 font-mono text-sm">
+            no port_stats rows yet — run tools/load_gpha_port_stats.py to load data.
+          </p>
+          {portActivityRes.error && (
+            <p className="text-rose-400 font-mono text-xs mt-2">
+              {portActivityRes.error.message}
+            </p>
+          )}
+        </section>
+      )}
 
       {partners.length > 0 && (
         <TradePartnersChart partners={partners} dataWindow={tradeWindow} />

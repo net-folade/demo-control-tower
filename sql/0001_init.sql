@@ -11,30 +11,7 @@ create table if not exists _health (
 insert into _health (id, status) values (1, 'ok')
 on conflict (id) do update set status = excluded.status, checked_at = now();
 
--- Vessels: current state, one row per MMSI
-create table if not exists vessels (
-  mmsi        bigint primary key,
-  name        text,
-  ship_type   text,
-  flag        text,
-  last_seen   timestamptz,
-  last_lat    double precision,
-  last_lng    double precision
-);
-
--- Vessel positions: time series, pruned to last 14 days
-create table if not exists vessel_positions (
-  id          bigserial primary key,
-  mmsi        bigint not null references vessels(mmsi) on delete cascade,
-  ts          timestamptz not null,
-  lat         double precision,
-  lng         double precision,
-  sog         real,
-  cog         real,
-  nav_status  text
-);
-
--- Port events: derived arrivals/departures/anchored from vessel_positions
+-- Port events: derived arrivals/departures (future: from GPHA daily bulletins)
 create table if not exists port_events (
   id          bigserial primary key,
   port_code   text not null,                 -- 'TEMA' | 'TAKORADI'

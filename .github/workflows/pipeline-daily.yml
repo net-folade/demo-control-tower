@@ -32,5 +32,5 @@ jobs:
       # - run: python tools/fetch_weather_ports.py
       # - run: python tools/fetch_gdelt_disruptions.py
       # - run: python tools/fetch_bog_fx.py
-      # - run: python tools/prune_retention.py
+      # - run: python tools/prune_retention.py   # rebuild in Slice 5 once weather_obs is in use
       - run: echo "no daily jobs registered yet"

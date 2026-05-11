@@ -31,5 +31,8 @@ jobs:
       - name: Refresh commodity prices (World Bank Pink Sheet)
         run: python tools/fetch_pink_sheet.py
 
+      - name: Load GPHA annual port stats (idempotent — picks up CSV updates)
+        run: python tools/load_gpha_port_stats.py
+
       # Wired up in Slice 2
       # - run: python tools/fetch_comtrade_monthly.py

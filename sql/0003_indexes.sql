@@ -1,12 +1,6 @@
 -- 0003_indexes.sql
 -- Indexes for time-series and lookup queries. Run after 0001 and 0002.
 
-create index if not exists idx_vessel_positions_mmsi_ts
-  on vessel_positions (mmsi, ts desc);
-
-create index if not exists idx_vessel_positions_ts
-  on vessel_positions (ts desc);
-
 create index if not exists idx_port_events_port_ts
   on port_events (port_code, ts desc);
 

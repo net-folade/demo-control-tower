@@ -2,33 +2,6 @@
 -- Views the frontend reads. Run after 0001_init.sql.
 -- Frontend should always read from views (or simple tables), never join across tables in the UI.
 
--- Latest position per vessel within the Ghana coastal bounding box.
--- Bbox: lat 4.5–6.0, lng -3.5–1.5 (covers Tema and Takoradi approaches).
-create or replace view v_active_vessels_near_port as
-with latest as (
-  select distinct on (mmsi)
-    mmsi, ts, lat, lng, sog, cog, nav_status
-  from vessel_positions
-  where ts > now() - interval '6 hours'
-    and lat between 4.5 and 6.0
-    and lng between -3.5 and 1.5
-  order by mmsi, ts desc
-)
-select
-  v.mmsi,
-  v.name,
-  v.ship_type,
-  v.flag,
-  l.ts,
-  l.lat,
-  l.lng,
-  l.sog,
-  l.cog,
-  l.nav_status,
-  case when coalesce(l.sog, 0) < 0.5 then 'anchored' else 'underway' end as motion
-from latest l
-join vessels v on v.mmsi = l.mmsi;
-
 -- Daily port throughput from derived port_events.
 create or replace view v_port_throughput_daily as
 select

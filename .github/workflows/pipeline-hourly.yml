@@ -17,7 +17,6 @@ jobs:
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-      AISSTREAM_KEY: ${{ secrets.AISSTREAM_KEY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -28,7 +27,7 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      # Wired up in Slice 3
-      # - run: python tools/snapshot_ais_vessels.py
-      # - run: python tools/derive_port_events.py
+      # No hourly jobs yet. Slice 3 pivoted from hourly AIS snapshots to
+      # annual GPHA stats (scheduled monthly). This file stays for future
+      # live-cadence sources (e.g. satellite-AIS, real-time weather).
       - run: echo "no hourly jobs registered yet"
