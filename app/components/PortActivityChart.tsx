@@ -10,6 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useChartColors } from "../lib/theme";
 
 export type PortActivityRow = {
   port_code: "TEMA" | "TAKORADI";
@@ -44,6 +45,7 @@ const DEFAULT_YEAR_MIN = 2018;
 
 export function PortActivityChart({ rows }: { rows: PortActivityRow[] }) {
   const [metric, setMetric] = useState("vessel_calls");
+  const c = useChartColors();
 
   const data = useMemo(() => {
     const byYear = new Map<number, { year: number; TEMA?: number; TAKORADI?: number }>();
@@ -97,27 +99,27 @@ export function PortActivityChart({ rows }: { rows: PortActivityRow[] }) {
       <div style={{ width: "100%", height: 320 }}>
         <ResponsiveContainer>
           <LineChart data={data} margin={{ top: 8, right: 16, bottom: 8, left: 8 }}>
-            <CartesianGrid stroke="#262626" strokeDasharray="3 3" />
+            <CartesianGrid stroke={c.grid} strokeDasharray="3 3" />
             <XAxis
               dataKey="year"
-              tick={{ fill: "#737373", fontSize: 11 }}
-              stroke="#404040"
+              tick={{ fill: c.tick, fontSize: 11 }}
+              stroke={c.axis}
             />
             <YAxis
-              tick={{ fill: "#737373", fontSize: 11 }}
-              stroke="#404040"
+              tick={{ fill: c.tick, fontSize: 11 }}
+              stroke={c.axis}
               tickFormatter={(v: number) => compact.format(v)}
               width={56}
             />
             <Tooltip
-              cursor={{ stroke: "#404040" }}
+              cursor={{ stroke: c.cursor }}
               contentStyle={{
-                background: "#0a0a0a",
-                border: "1px solid #262626",
+                background: c.tooltipBg,
+                border: `1px solid ${c.tooltipBorder}`,
                 fontSize: 12,
               }}
-              labelStyle={{ color: "#a3a3a3" }}
-              itemStyle={{ color: "#e5e5e5" }}
+              labelStyle={{ color: c.tooltipLabel }}
+              itemStyle={{ color: c.tooltipItem }}
               formatter={(value: number) => [
                 `${compact.format(value)} ${active.unit}`,
                 "",
@@ -126,18 +128,18 @@ export function PortActivityChart({ rows }: { rows: PortActivityRow[] }) {
             <Line
               type="monotone"
               dataKey="TEMA"
-              stroke="#34d399"
+              stroke={c.accent.emerald}
               strokeWidth={2}
-              dot={{ r: 2, fill: "#34d399" }}
+              dot={{ r: 2, fill: c.accent.emerald }}
               activeDot={{ r: 4 }}
               isAnimationActive={false}
             />
             <Line
               type="monotone"
               dataKey="TAKORADI"
-              stroke="#f59e0b"
+              stroke={c.accent.amber}
               strokeWidth={2}
-              dot={{ r: 2, fill: "#f59e0b" }}
+              dot={{ r: 2, fill: c.accent.amber }}
               activeDot={{ r: 4 }}
               isAnimationActive={false}
             />

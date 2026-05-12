@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider, THEME_INIT_SCRIPT } from "../lib/theme";
+import { ThemeToggle } from "../components/ThemeToggle";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,16 +37,20 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body
         className="min-h-full flex flex-col bg-neutral-950 text-neutral-100"
         suppressHydrationWarning
       >
-        <TopNav />
-        <div className="flex flex-1 flex-col w-full max-w-6xl mx-auto px-6 py-10">
-          {children}
-        </div>
-        <SiteFooter />
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <ThemeProvider>
+          <TopNav />
+          <div className="flex flex-1 flex-col w-full max-w-6xl mx-auto px-6 py-10">
+            {children}
+          </div>
+          <SiteFooter />
+        </ThemeProvider>
       </body>
     </html>
   );
@@ -83,6 +89,9 @@ function TopNav() {
             >
               GitHub ↗
             </a>
+          </li>
+          <li className="pl-1">
+            <ThemeToggle />
           </li>
         </ul>
       </nav>

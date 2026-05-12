@@ -3,6 +3,7 @@
 import "leaflet/dist/leaflet.css";
 import { CircleMarker, MapContainer, Marker, Popup, TileLayer, Tooltip } from "react-leaflet";
 import L from "leaflet";
+import { useTheme } from "../lib/theme";
 
 export type PortBadge = {
   port_code: "TEMA" | "TAKORADI";
@@ -26,13 +27,12 @@ const compact = new Intl.NumberFormat(undefined, {
   maximumFractionDigits: 1,
 });
 
-function badgeIcon(count: number): L.DivIcon {
-  // Small rose-colored pip rendered to the upper-right of the port circle.
+function badgeIcon(count: number, borderColor: string): L.DivIcon {
   return L.divIcon({
     className: "",
     html: `<div style="
       background:#f43f5e;color:#fff;font:600 10px ui-sans-serif,system-ui;
-      border:1.5px solid #0a0a0a;border-radius:9999px;
+      border:1.5px solid ${borderColor};border-radius:9999px;
       min-width:18px;height:18px;line-height:15px;text-align:center;padding:0 4px;
       box-shadow:0 0 0 1px rgba(244,63,94,0.4);
     ">${count}</div>`,
@@ -48,6 +48,11 @@ type MapProps = {
 };
 
 export function PortLocationsMap({ badges, selectedPort, onPortClick }: MapProps) {
+  const { theme, colors } = useTheme();
+  const tileUrl =
+    theme === "light"
+      ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
+      : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png";
   return (
     <section className="rounded-lg border border-neutral-800 bg-neutral-900/50 px-5 py-4 flex flex-col gap-3 w-full">
       <div className="flex items-baseline justify-between">
@@ -62,11 +67,12 @@ export function PortLocationsMap({ badges, selectedPort, onPortClick }: MapProps
         <MapContainer
           center={[5.25, -0.85]}
           zoom={8}
-          style={{ height: "100%", width: "100%", background: "#0a0a0a" }}
+          style={{ height: "100%", width: "100%", background: colors.surface }}
           scrollWheelZoom={false}
         >
           <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
+            key={theme}
+            url={tileUrl}
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
           />
           {badges.map((b) => {
@@ -139,9 +145,9 @@ export function PortLocationsMap({ badges, selectedPort, onPortClick }: MapProps
               const coords = PORT_COORDS[b.port_code];
               return (
                 <Marker
-                  key={`badge-${b.port_code}`}
+                  key={`badge-${b.port_code}-${theme}`}
                   position={[coords.lat, coords.lng]}
-                  icon={badgeIcon(b.alert_count)}
+                  icon={badgeIcon(b.alert_count, colors.surface)}
                   interactive={false}
                 >
                   <Tooltip direction="top" offset={[2, -14]} opacity={0.95}>

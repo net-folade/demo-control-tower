@@ -10,6 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useChartColors } from "../lib/theme";
 
 type Row = {
   period: string;
@@ -28,6 +29,7 @@ const compact = new Intl.NumberFormat(undefined, {
 });
 
 export function TradeValueChart({ data, title = "Trade value" }: Props) {
+  const c = useChartColors();
   const byPeriod = new Map<string, { period: string; import: number; export: number }>();
   for (const r of data) {
     const key = r.period;
@@ -54,32 +56,33 @@ export function TradeValueChart({ data, title = "Trade value" }: Props) {
       <div style={{ width: "100%", height: 280 }}>
         <ResponsiveContainer>
           <BarChart data={series} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
-            <CartesianGrid stroke="#262626" strokeDasharray="3 3" />
+            <CartesianGrid stroke={c.grid} strokeDasharray="3 3" />
             <XAxis
               dataKey="label"
-              tick={{ fill: "#737373", fontSize: 11 }}
-              stroke="#404040"
+              tick={{ fill: c.tick, fontSize: 11 }}
+              stroke={c.axis}
               minTickGap={32}
             />
             <YAxis
-              tick={{ fill: "#737373", fontSize: 11 }}
-              stroke="#404040"
+              tick={{ fill: c.tick, fontSize: 11 }}
+              stroke={c.axis}
               width={56}
               tickFormatter={(v: number) => compact.format(v)}
             />
             <Tooltip
               contentStyle={{
-                background: "#0a0a0a",
-                border: "1px solid #262626",
+                background: c.tooltipBg,
+                border: `1px solid ${c.tooltipBorder}`,
                 fontSize: 12,
               }}
-              labelStyle={{ color: "#a3a3a3" }}
-              itemStyle={{ color: "#e5e5e5" }}
+              labelStyle={{ color: c.tooltipLabel }}
+              itemStyle={{ color: c.tooltipItem }}
               formatter={(value: number) => `$${compact.format(value)}`}
+              cursor={{ fill: c.barCursor }}
             />
-            <Legend wrapperStyle={{ fontSize: 11, color: "#a3a3a3" }} />
-            <Bar dataKey="export" stackId="flow" fill="#34d399" />
-            <Bar dataKey="import" stackId="flow" fill="#60a5fa" />
+            <Legend wrapperStyle={{ fontSize: 11, color: c.tooltipLabel }} />
+            <Bar dataKey="export" stackId="flow" fill={c.accent.emerald} />
+            <Bar dataKey="import" stackId="flow" fill={c.accent.blue} />
           </BarChart>
         </ResponsiveContainer>
       </div>

@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 
 import { CommodityPriceChart } from "./CommodityPriceChart";
 import { KpiTile } from "./KpiTile";
+import { useChartColors } from "../lib/theme";
 
 export type CommodityKey = "cocoa" | "gold" | "crude_brent" | "rice";
 
@@ -30,13 +31,6 @@ const ACCENT_BY_KEY: Record<CommodityKey, "emerald" | "amber" | "cyan" | "violet
   rice: "violet",
 };
 
-const HEX_BY_ACCENT: Record<"emerald" | "amber" | "cyan" | "violet", string> = {
-  emerald: "#34d399",
-  amber: "#fbbf24",
-  cyan: "#22d3ee",
-  violet: "#a78bfa",
-};
-
 function formatPrice(value: number | null): string {
   if (value === null || value === undefined) return "—";
   if (value >= 1000) {
@@ -47,6 +41,7 @@ function formatPrice(value: number | null): string {
 
 export function CommoditySection({ commodities, defaultKey = "cocoa" }: Props) {
   const [activeKey, setActiveKey] = useState<CommodityKey>(defaultKey);
+  const colors = useChartColors();
 
   const active = useMemo(
     () => commodities.find((c) => c.key === activeKey) ?? commodities[0],
@@ -55,7 +50,7 @@ export function CommoditySection({ commodities, defaultKey = "cocoa" }: Props) {
 
   if (!active) return null;
   const accent = ACCENT_BY_KEY[active.key];
-  const accentHex = HEX_BY_ACCENT[accent];
+  const accentHex = colors.accent[accent];
 
   return (
     <section className="flex flex-col gap-4">
@@ -81,7 +76,7 @@ export function CommoditySection({ commodities, defaultKey = "cocoa" }: Props) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {commodities.map((c) => {
           const selected = c.key === activeKey;
-          const ringHex = HEX_BY_ACCENT[ACCENT_BY_KEY[c.key]];
+          const ringHex = colors.accent[ACCENT_BY_KEY[c.key]];
           const pct = c.pctChangeMom;
           const pctColor =
             pct === null
@@ -102,7 +97,7 @@ export function CommoditySection({ commodities, defaultKey = "cocoa" }: Props) {
                   : "bg-neutral-900/40 hover:bg-neutral-900/70"
               }`}
               style={{
-                borderColor: selected ? ringHex : "#262626",
+                borderColor: selected ? ringHex : colors.borderSubtle,
                 boxShadow: selected ? `0 0 0 1px ${ringHex}33` : "none",
               }}
             >

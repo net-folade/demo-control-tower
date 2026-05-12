@@ -1,3 +1,7 @@
+"use client";
+
+import { useChartColors } from "../lib/theme";
+
 type SparkPoint = { period: string; value: number };
 
 type KpiTileProps = {
@@ -11,14 +15,6 @@ type KpiTileProps = {
   size?: "default" | "large";
 };
 
-const ACCENT_STROKE: Record<NonNullable<KpiTileProps["accent"]>, string> = {
-  emerald: "#34d399",
-  cyan: "#22d3ee",
-  amber: "#fbbf24",
-  rose: "#fb7185",
-  violet: "#a78bfa",
-};
-
 export function KpiTile({
   label,
   value,
@@ -29,6 +25,8 @@ export function KpiTile({
   accent = "emerald",
   size = "default",
 }: KpiTileProps) {
+  const c = useChartColors();
+  const accentStroke = c.accent[accent];
   const arrow = pctChange === null ? "" : pctChange > 0 ? "▲" : pctChange < 0 ? "▼" : "■";
   const trendColor =
     pctChange === null
@@ -62,7 +60,8 @@ export function KpiTile({
       {sparkline && sparkline.length > 1 && (
         <Sparkline
           points={sparkline}
-          color={ACCENT_STROKE[accent]}
+          color={accentStroke}
+          gradientStop={c.gradientStop}
           height={size === "large" ? 56 : 32}
         />
       )}
@@ -76,10 +75,12 @@ export function KpiTile({
 function Sparkline({
   points,
   color,
+  gradientStop,
   height = 32,
 }: {
   points: SparkPoint[];
   color: string;
+  gradientStop: string;
   height?: number;
 }) {
   const w = 200;
@@ -112,7 +113,7 @@ function Sparkline({
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={color} stopOpacity="0.45" />
-          <stop offset="100%" stopColor="#0a0a0a" stopOpacity="0" />
+          <stop offset="100%" stopColor={gradientStop} stopOpacity="0" />
         </linearGradient>
       </defs>
       <path d={areaPath} fill={`url(#${gradientId})`} stroke="none" />

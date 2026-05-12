@@ -10,6 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useChartColors } from "../lib/theme";
 
 export type PartnerYearRow = {
   year: number;
@@ -33,6 +34,7 @@ const compact = new Intl.NumberFormat(undefined, {
 });
 
 export function TradePartnersChart({ rows, dataWindow, topN = 10 }: Props) {
+  const c = useChartColors();
   const years = useMemo(
     () =>
       Array.from(new Set(rows.map((r) => r.year))).sort((a, b) => b - a),
@@ -118,29 +120,29 @@ export function TradePartnersChart({ rows, dataWindow, topN = 10 }: Props) {
             layout="vertical"
             margin={{ top: 8, right: 16, bottom: 8, left: 8 }}
           >
-            <CartesianGrid stroke="#262626" strokeDasharray="3 3" horizontal={false} />
+            <CartesianGrid stroke={c.grid} strokeDasharray="3 3" horizontal={false} />
             <XAxis
               type="number"
-              tick={{ fill: "#737373", fontSize: 11 }}
-              stroke="#404040"
+              tick={{ fill: c.tick, fontSize: 11 }}
+              stroke={c.axis}
               tickFormatter={(v: number) => compact.format(v)}
             />
             <YAxis
               type="category"
               dataKey="partner"
-              tick={{ fill: "#a3a3a3", fontSize: 11 }}
-              stroke="#404040"
+              tick={{ fill: c.tickStrong, fontSize: 11 }}
+              stroke={c.axis}
               width={48}
             />
             <Tooltip
-              cursor={{ fill: "#171717" }}
+              cursor={{ fill: c.barCursor }}
               contentStyle={{
-                background: "#0a0a0a",
-                border: "1px solid #262626",
+                background: c.tooltipBg,
+                border: `1px solid ${c.tooltipBorder}`,
                 fontSize: 12,
               }}
-              labelStyle={{ color: "#a3a3a3" }}
-              itemStyle={{ color: "#e5e5e5" }}
+              labelStyle={{ color: c.tooltipLabel }}
+              itemStyle={{ color: c.tooltipItem }}
               formatter={(value: number, _name, item) => {
                 const share = item?.payload?.share;
                 return [
@@ -149,7 +151,7 @@ export function TradePartnersChart({ rows, dataWindow, topN = 10 }: Props) {
                 ];
               }}
             />
-            <Bar dataKey="value" fill="#34d399" />
+            <Bar dataKey="value" fill={c.accent.emerald} />
           </BarChart>
         </ResponsiveContainer>
       </div>

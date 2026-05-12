@@ -11,6 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useChartColors } from "../lib/theme";
 
 type Point = { period: string; price_usd: number };
 
@@ -31,10 +32,12 @@ export function CommodityPriceChart({
   commodity,
   unit,
   defaultRangeYears = 5,
-  color = "#34d399",
+  color,
   height = 320,
   showBrush = false,
 }: Props) {
+  const c = useChartColors();
+  const stroke = color ?? c.accent.emerald;
   const displayData = useMemo(() => {
     if (data.length === 0) return data;
     if (showBrush) return data;
@@ -82,7 +85,7 @@ export function CommodityPriceChart({
     return `${first} – ${last}`;
   }, [formatted, showBrush, startIndex, endIndex]);
 
-  const gradientId = `commodity-area-${color.replace("#", "")}-${showBrush ? "b" : "s"}`;
+  const gradientId = `commodity-area-${stroke.replace("#", "")}-${showBrush ? "b" : "s"}`;
   const brushKey = `brush-${data.length}-${defaultRangeYears}`;
 
   return (
@@ -101,36 +104,36 @@ export function CommodityPriceChart({
           <AreaChart data={formatted} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
             <defs>
               <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={color} stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#0a0a0a" stopOpacity="0" />
+                <stop offset="0%" stopColor={stroke} stopOpacity="0.4" />
+                <stop offset="100%" stopColor={c.gradientStop} stopOpacity="0" />
               </linearGradient>
             </defs>
-            <CartesianGrid stroke="#262626" strokeDasharray="3 3" />
+            <CartesianGrid stroke={c.grid} strokeDasharray="3 3" />
             <XAxis
               dataKey="label"
-              tick={{ fill: "#737373", fontSize: 11 }}
-              stroke="#404040"
+              tick={{ fill: c.tick, fontSize: 11 }}
+              stroke={c.axis}
               minTickGap={48}
             />
             <YAxis
-              tick={{ fill: "#737373", fontSize: 11 }}
-              stroke="#404040"
+              tick={{ fill: c.tick, fontSize: 11 }}
+              stroke={c.axis}
               width={56}
               domain={["auto", "auto"]}
             />
             <Tooltip
               contentStyle={{
-                background: "#0a0a0a",
-                border: "1px solid #262626",
+                background: c.tooltipBg,
+                border: `1px solid ${c.tooltipBorder}`,
                 fontSize: 12,
               }}
-              labelStyle={{ color: "#a3a3a3" }}
-              itemStyle={{ color: "#e5e5e5" }}
+              labelStyle={{ color: c.tooltipLabel }}
+              itemStyle={{ color: c.tooltipItem }}
             />
             <Area
               type="monotone"
               dataKey="price"
-              stroke={color}
+              stroke={stroke}
               strokeWidth={1.75}
               fill={`url(#${gradientId})`}
               isAnimationActive={false}
@@ -140,8 +143,8 @@ export function CommodityPriceChart({
                 key={brushKey}
                 dataKey="label"
                 height={24}
-                stroke={color}
-                fill="#0a0a0a"
+                stroke={stroke}
+                fill={c.surface}
                 travellerWidth={8}
                 tickFormatter={() => ""}
                 startIndex={startIndex}

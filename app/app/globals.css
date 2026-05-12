@@ -1,10 +1,52 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: dark;
   --background: #0a0a0a;
   --foreground: #ededed;
   --muted: #a3a3a3;
   --accent: #38bdf8;
+}
+
+html.light {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #171717;
+  --muted: #525252;
+  --accent: #0284c7;
+
+  /* Invert the neutral scale so every `bg-neutral-*` / `text-neutral-*` */
+  /* utility flips meaning: 950 = surface, 50 = strongest text. */
+  /* Muted text shades (400/500/600) are intentionally darker than a pure */
+  /* inversion to keep captions and footnotes readable on white. */
+  --color-neutral-50: #0a0a0a;
+  --color-neutral-100: #171717;
+  --color-neutral-200: #262626;
+  --color-neutral-300: #2e2e2e;
+  --color-neutral-400: #404040;
+  --color-neutral-500: #525252;
+  --color-neutral-600: #6b6b6b;
+  --color-neutral-700: #d4d4d4;
+  --color-neutral-800: #e5e5e5;
+  --color-neutral-900: #f5f5f5;
+  --color-neutral-950: #ffffff;
+
+  /* Pull accent shades toward the darker end so they read on white. */
+  /* (Tailwind utilities reference these vars; overriding them remaps */
+  /*  every existing `text-emerald-300`, `bg-amber-400`, etc.) */
+  --color-emerald-200: #047857;
+  --color-emerald-300: #047857;
+  --color-emerald-400: #059669;
+  --color-emerald-500: #047857;
+  --color-amber-300: #b45309;
+  --color-amber-400: #b45309;
+  --color-amber-500: #b45309;
+  --color-rose-300: #be123c;
+  --color-rose-400: #e11d48;
+  --color-rose-500: #be123c;
+  --color-rose-600: #9f1239;
+  --color-sky-300: #0369a1;
+  --color-sky-400: #0284c7;
 }
 
 @theme inline {
@@ -24,4 +66,27 @@ body {
 
 body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Leaflet popup chrome — Leaflet hardcodes white bg + black text; */
+/* override so popups stay legible in dark mode and look native in light. */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--background) !important;
+  color: var(--foreground) !important;
+}
+html:not(.light) .leaflet-popup-content-wrapper,
+html:not(.light) .leaflet-popup-tip {
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.6) !important;
+}
+.leaflet-container .leaflet-control-attribution {
+  background: rgba(0, 0, 0, 0.4) !important;
+  color: #d4d4d4 !important;
+}
+html.light .leaflet-container .leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.85) !important;
+  color: #525252 !important;
+}
+html.light .leaflet-container .leaflet-control-attribution a {
+  color: #0369a1 !important;
 }
