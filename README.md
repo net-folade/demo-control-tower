@@ -21,7 +21,7 @@ Portfolio-grade prototype built entirely on **publicly available data** and **fr
 
 ### 1. Supabase
 1. Create a project at [app.supabase.com](https://app.supabase.com) named `gh-control-tower`.
-2. Open the SQL editor and run, in order: `sql/0001_init.sql`, `sql/0002_views.sql`, `sql/0003_indexes.sql`, `sql/0004_trade_flow_views.sql`, `sql/0005_drop_vessels.sql`, `sql/0006_port_stats.sql`.
+2. Open the SQL editor and run, in order: `sql/0001_init.sql`, `sql/0002_views.sql`, `sql/0003_indexes.sql`, `sql/0004_trade_flow_views.sql`, `sql/0005_drop_vessels.sql`, `sql/0006_port_stats.sql`, `sql/0007_disruption_keys.sql`.
 3. From **Settings → API**, copy the project URL, the `anon` public key, and the `service_role` key.
 
 ### 2. Local environment
@@ -44,7 +44,7 @@ npm run dev
 2. Add env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 
 ### 4. GitHub Actions
-Add repo secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, plus source API keys (`OPENWEATHER_KEY`, `COMTRADE_KEY`) as they come into scope.
+Add repo secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`. Comtrade is optional (free without a key); Open-Meteo and GDELT require no auth.
 
 ---
 
@@ -84,7 +84,9 @@ Real-world limits shaped the build. Documenting them is part of the demo.
 - **Ghana stopped reporting to UN Comtrade after December 2023.** The trade-flows slice surfaces real partner totals, but the latest available period anywhere on the dashboard is Dec 2023. Charts and tiles label this gap explicitly.
 - **GPHA publishes annually, not monthly.** Public GPHA bulletins are once-yearly (the 2014–2024 report dropped in June 2025). Anything time-sensitive in the original plan that needed monthly cadence (e.g. weekly arrivals KPI, MoM throughput) was either dropped or adjusted to annual + YoY trend. Monthly bulletins exist internally at GPHA but are not publicly posted.
 - **Supabase free tier: 500 MB / 5 GB egress.** Volume-heavy time series (vessel pings) would have blown this; the pivot to annual stats removes the risk entirely.
-- **GitHub Actions free tier: 2,000 min/mo** (public repos: unlimited). Pipelines are scheduled on the coarsest cadence that still makes sense per source (monthly for GPHA + Pink Sheet + Comtrade, daily for weather/news once wired in Slice 5).
+- **GitHub Actions free tier: 2,000 min/mo** (public repos: unlimited). Pipelines are scheduled on the coarsest cadence that still makes sense per source (monthly for GPHA + Pink Sheet + Comtrade, daily for Open-Meteo weather + GDELT news).
+- **OpenWeather killed its free signup; pivoted to Open-Meteo.** PLAN.md originally specified OpenWeather's Current Weather Data API for port-local conditions. As of May 2026, OpenWeather requires a credit card on file even for free-tier signup, which would have created a real-money dependency in a portfolio demo. Swapped to **Open-Meteo** (no key, no signup, 10k calls/day per IP). Field set is equivalent (`temperature_2m`, `wind_speed_10m`, `precipitation`, WMO `weather_code`); Tema/Takoradi remain at the same coordinates. Documented in `workflows/refresh_weather.md`.
+- **GDELT signal for Ghana ports is sparse.** GDELT 2.0 returns ~50 English-language articles per 30-day window for Tema/Takoradi/Ghana-ports queries, of which only ~10–15% breach the "elevated severity" threshold once classified by title keywords. The dashboard reflects that honestly — the `Active disruptions (7d)` tile is often single-digit. Broadening the query risks false positives (the phrase "Tema" also matches "Tema, Mali"); the demo prefers correctness over fullness.
 - **Free Vercel cold starts.** Heavy server-side compute is offloaded to the pipeline; the app reads pre-aggregated views from Supabase.
 
 ---
@@ -100,3 +102,4 @@ Things a maintainer (or a hiring manager reading this) should see as natural nex
 - **Cache layer in front of Supabase.** As the dashboard grows, swap raw view reads for an edge-cached API route (Vercel Edge + ISR) so anonymous viewers don't hammer the DB.
 - **RLS hardening.** Current setup is read-only public via `anon` key; before connecting any user-write surfaces, lock down row-level security per table.
 - **Authenticated mode + scenario persistence.** The Slice 6 scenario toggle is client-side only. A logged-in mode could persist scenarios as named views to share with stakeholders.
+- **Smarter disruption classification.** Title-keyword severity scoring is a baseline — a future pass could use the article body, sentiment, GDELT GKG themes, or a small LLM classifier to distinguish "Tema port reopens after strike" (good news) from "Tema port shut by strike" (bad news), since both currently land at severity 4 / event_type=closure.

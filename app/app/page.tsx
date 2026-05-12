@@ -1,3 +1,4 @@
+import { AlertsPanel } from "@/components/AlertsPanel";
 import { CommodityPriceChart } from "@/components/CommodityPriceChart";
 import { KpiTile } from "@/components/KpiTile";
 import { PortActivityChart, type PortActivityRow } from "@/components/PortActivityChart";
@@ -38,6 +39,17 @@ type PartnerRow = {
   share_pct: number;
 };
 
+type AlertRow = {
+  id: number;
+  source: string;
+  event_type: string;
+  ts: string;
+  location: string | null;
+  headline: string;
+  url: string | null;
+  severity: number;
+};
+
 type PortStatsLatestRow = {
   port_code: "TEMA" | "TAKORADI";
   metric: string;
@@ -67,6 +79,7 @@ export default async function Home() {
     tradeLatestRes,
     portStatsLatestRes,
     portActivityRes,
+    alertsRes,
   ] = await Promise.all([
     client
       .from("v_commodity_price_latest")
@@ -99,6 +112,10 @@ export default async function Home() {
     client
       .from("v_port_activity")
       .select("port_code, year, metric, value, unit"),
+    client
+      .from("v_active_alerts")
+      .select("id, source, event_type, ts, location, headline, url, severity")
+      .order("ts", { ascending: false }),
   ]);
 
   const latest = (latestRes.data ?? []) as LatestPriceRow[];
@@ -109,6 +126,12 @@ export default async function Home() {
   const partners = (partnersRes.data ?? []) as PartnerRow[];
   const portStatsLatest = (portStatsLatestRes.data ?? []) as PortStatsLatestRow[];
   const portActivity = (portActivityRes.data ?? []) as PortActivityRow[];
+  const alerts = (alertsRes.data ?? []) as AlertRow[];
+  const activeDisruptions = kpis.find((k) => k.metric === "active_disruptions") ?? null;
+  const alertsByPort: Record<"TEMA" | "TAKORADI", AlertRow[]> = {
+    TEMA: alerts.filter((a) => a.location === "TEMA"),
+    TAKORADI: alerts.filter((a) => a.location === "TAKORADI"),
+  };
 
   const findStat = (port: "TEMA" | "TAKORADI", metric: string) =>
     portStatsLatest.find((s) => s.port_code === port && s.metric === metric) ?? null;
@@ -118,6 +141,7 @@ export default async function Home() {
   const portBadges: PortBadge[] = (["TEMA", "TAKORADI"] as const).map((p) => {
     const vc = findStat(p, "vessel_calls");
     const cg = findStat(p, "cargo_tonnes");
+    const portAlerts = alertsByPort[p];
     return {
       port_code: p,
       name: p,
@@ -126,6 +150,8 @@ export default async function Home() {
       vessel_calls_latest: vc?.value ?? null,
       cargo_tonnes_latest: cg?.value ?? null,
       year: vc?.year ?? cg?.year ?? null,
+      alert_count: portAlerts.length,
+      alert_headlines: portAlerts.slice(0, 3).map((a) => a.headline),
     };
   });
 
@@ -192,11 +218,24 @@ export default async function Home() {
           sparkline={tradeYtd?.sparkline ?? null}
           footnote={tradeWindow}
         />
+        <KpiTile
+          label="Active disruptions (7d)"
+          value={
+            activeDisruptions
+              ? compact.format(Number(activeDisruptions.current_value))
+              : "0"
+          }
+          pctChange={activeDisruptions?.pct_change ?? null}
+          sparkline={activeDisruptions?.sparkline ?? null}
+          footnote="severity ≥ 3 · Open-Meteo + GDELT"
+        />
       </section>
 
       {portStatsLatest.length > 0 && (
         <PortLocationsMapSection badges={portBadges} />
       )}
+
+      <AlertsPanel alerts={alerts} />
 
       {portActivity.length > 0 ? (
         <PortActivityChart rows={portActivity} />

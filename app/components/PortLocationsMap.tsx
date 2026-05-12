@@ -1,7 +1,8 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
-import { CircleMarker, MapContainer, Popup, TileLayer } from "react-leaflet";
+import { CircleMarker, MapContainer, Marker, Popup, TileLayer, Tooltip } from "react-leaflet";
+import L from "leaflet";
 
 export type PortBadge = {
   port_code: "TEMA" | "TAKORADI";
@@ -11,6 +12,8 @@ export type PortBadge = {
   vessel_calls_latest: number | null;
   cargo_tonnes_latest: number | null;
   year: number | null;
+  alert_count: number;
+  alert_headlines: string[];
 };
 
 const PORT_COORDS: Record<"TEMA" | "TAKORADI", { lat: number; lng: number; name: string }> = {
@@ -22,6 +25,21 @@ const compact = new Intl.NumberFormat(undefined, {
   notation: "compact",
   maximumFractionDigits: 1,
 });
+
+function badgeIcon(count: number): L.DivIcon {
+  // Small rose-colored pip rendered to the upper-right of the port circle.
+  return L.divIcon({
+    className: "",
+    html: `<div style="
+      background:#f43f5e;color:#fff;font:600 10px ui-sans-serif,system-ui;
+      border:1.5px solid #0a0a0a;border-radius:9999px;
+      min-width:18px;height:18px;line-height:15px;text-align:center;padding:0 4px;
+      box-shadow:0 0 0 1px rgba(244,63,94,0.4);
+    ">${count}</div>`,
+    iconSize: [18, 18],
+    iconAnchor: [-6, 18],
+  });
+}
 
 export function PortLocationsMap({ badges }: { badges: PortBadge[] }) {
   return (
@@ -47,14 +65,16 @@ export function PortLocationsMap({ badges }: { badges: PortBadge[] }) {
           />
           {badges.map((b) => {
             const coords = PORT_COORDS[b.port_code];
+            const hasAlerts = b.alert_count > 0;
+            const ringColor = hasAlerts ? "#f43f5e" : "#34d399";
             return (
               <CircleMarker
                 key={b.port_code}
                 center={[coords.lat, coords.lng]}
                 radius={10}
                 pathOptions={{
-                  color: "#34d399",
-                  fillColor: "#34d399",
+                  color: ringColor,
+                  fillColor: ringColor,
                   fillOpacity: 0.7,
                   weight: 2,
                 }}
@@ -81,11 +101,44 @@ export function PortLocationsMap({ badges }: { badges: PortBadge[] }) {
                           : "—"}
                       </strong>
                     </div>
+                    {hasAlerts && (
+                      <div className="mt-2 pt-2 border-t border-neutral-300">
+                        <div className="font-semibold text-rose-600">
+                          {b.alert_count} active disruption
+                          {b.alert_count === 1 ? "" : "s"}
+                        </div>
+                        <ul className="mt-1 list-disc list-inside space-y-0.5">
+                          {b.alert_headlines.map((h, i) => (
+                            <li key={i} className="truncate max-w-[240px]">
+                              {h}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 </Popup>
               </CircleMarker>
             );
           })}
+          {badges
+            .filter((b) => b.alert_count > 0)
+            .map((b) => {
+              const coords = PORT_COORDS[b.port_code];
+              return (
+                <Marker
+                  key={`badge-${b.port_code}`}
+                  position={[coords.lat, coords.lng]}
+                  icon={badgeIcon(b.alert_count)}
+                  interactive={false}
+                >
+                  <Tooltip direction="top" offset={[2, -14]} opacity={0.95}>
+                    {b.alert_count} active disruption
+                    {b.alert_count === 1 ? "" : "s"}
+                  </Tooltip>
+                </Marker>
+              );
+            })}
         </MapContainer>
       </div>
     </section>
