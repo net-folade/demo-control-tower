@@ -4,7 +4,32 @@ A demo Control Tower for West Africa / Ghana trade flows — a centralized dashb
 
 Portfolio-grade prototype built entirely on **publicly available data** and **free-tier services**.
 
-**Live demo:** _(Vercel URL — pending)_
+**Live demo:** https://gh-control-tower.vercel.app/
+**Walkthrough:** https://drive.google.com/file/d/1nVyZEgcO8SDoJoTYBXBXRGvOfkgiHNfr/view?usp=drive_link
+
+---
+
+## Demo
+
+The dashboard at a glance:
+
+![Overview — top nav, hero, and the At-a-glance KPI strip](deliverables/screenshots/01-overview.png)
+
+Commodity drill-down (cocoa selected; chip to switch series):
+
+![Commodities — chip grid, KPI tile, price chart](deliverables/screenshots/02-commodities.png)
+
+Ports + live disruption signals (click a pin to filter the alerts panel):
+
+![Ports & disruptions — Tema and Takoradi map next to the AlertsPanel](deliverables/screenshots/03-ports-map-alerts.png)
+
+Port activity, Tema vs Takoradi (switch metric to surface the structural split):
+
+![Port activity — Tema vs Takoradi across multiple metrics](deliverables/screenshots/04-port-activity.png)
+
+Top trade partners by year (Comtrade data ends Dec 2023):
+
+![Trade partners — top 10 partner share for the latest reporting year](deliverables/screenshots/05-trade-partners.png)
 
 ---
 
@@ -21,7 +46,7 @@ Portfolio-grade prototype built entirely on **publicly available data** and **fr
 
 ### 1. Supabase
 1. Create a project at [app.supabase.com](https://app.supabase.com) named `gh-control-tower`.
-2. Open the SQL editor and run, in order: `sql/0001_init.sql`, `sql/0002_views.sql`, `sql/0003_indexes.sql`, `sql/0004_trade_flow_views.sql`, `sql/0005_drop_vessels.sql`, `sql/0006_port_stats.sql`, `sql/0007_disruption_keys.sql`.
+2. Open the SQL editor and run, in order: `sql/0001_init.sql`, `sql/0002_views.sql`, `sql/0003_indexes.sql`, `sql/0004_trade_flow_views.sql`, `sql/0005_drop_vessels.sql`, `sql/0006_port_stats.sql`, `sql/0007_disruption_keys.sql`, `sql/0008_trade_partners_by_year.sql`.
 3. From **Settings → API**, copy the project URL, the `anon` public key, and the `service_role` key.
 
 ### 2. Local environment
@@ -48,18 +73,6 @@ Add repo secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`. Comtrade is optional (
 
 ---
 
-## Architecture (WAT)
-
-This project follows a **Workflows → Agents → Tools** separation:
-
-- `workflows/` — markdown SOPs describing each ingestion or refresh job
-- `tools/` — Python scripts that do the deterministic execution (API calls, parsing, writes to Supabase)
-- `app/` — the Next.js frontend reading exclusively from Supabase
-
-See [`CLAUDE.md`](./CLAUDE.md) for the full architecture brief and [`PLAN.md`](./PLAN.md) for the build plan and slice sequence.
-
----
-
 ## Repo layout
 
 ```
@@ -69,7 +82,7 @@ pipeline/             Optional orchestration glue
 workflows/            Markdown SOPs (one per ingestion job)
 sql/                  Supabase migrations and views
 data/                 Hand-curated source data (e.g. GPHA stats CSV)
-.github/workflows/    Scheduled pipeline runs (hourly / daily / monthly)
+.github/workflows/    Scheduled pipeline runs (daily / monthly)
 deliverables/         Exports, screenshots, walkthroughs
 .tmp/                 Disposable intermediate scratch
 ```
@@ -92,8 +105,6 @@ Real-world limits shaped the build. Documenting them is part of the demo.
 ---
 
 ## Recommendations / future work
-
-Things a maintainer (or a hiring manager reading this) should see as natural next steps if this were a real product, not a portfolio piece.
 
 - **Replace GPHA annual stats with monthly bulletins.** GPHA's internal monthly performance reports exist; sourcing them (FOI request, partnership, or scraped from operational dashboards) would restore monthly granularity to the port KPIs and re-enable the original "Weekly arrivals (Tema)" hero metric.
 - **Add satellite-AIS for live Ghana vessel coverage.** Spire Maritime, Orbcomm, or MarineTraffic's paid tier would unblock the live `<PortMap>` originally specified in PLAN.md (`vessels` + `vessel_positions` tables were dropped in `sql/0005_drop_vessels.sql` but the schema is easy to reintroduce). The `websockets` Python dep is kept in `requirements.txt` as a hint for whoever picks this up.
