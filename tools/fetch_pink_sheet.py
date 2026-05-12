@@ -51,8 +51,8 @@ def download_workbook(url: str) -> bytes:
 def find_header_row(df: pd.DataFrame) -> int:
     """Locate the row that contains commodity names (e.g., 'Cocoa')."""
     for i in range(min(20, len(df))):
-        row = df.iloc[i].astype(str).tolist()
-        if any("Cocoa" in cell for cell in row):
+        row = df.iloc[i].tolist()
+        if any("Cocoa" in str(cell) for cell in row):
             return i
     raise RuntimeError("Could not locate header row (no 'Cocoa' in first 20 rows).")
 

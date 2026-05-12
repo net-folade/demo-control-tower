@@ -35,6 +35,7 @@ Behavior:
 - **Sheet name change.** If the "Monthly Prices" tab is renamed, update `SHEET_NAME` in the tool.
 - **Series renamed.** Add new candidate strings to `COMMODITY_HEADERS` rather than removing the old ones, so the matcher stays backward-compatible.
 - **Cocoa unit.** Pink Sheet historically reports cocoa in $/kg. If a future revision switches to cents/kg, the values will look 100× off — check the `unit` column before panicking.
+- **Cell-dtype coercion.** `find_header_row` wraps each cell with `str()` inside the search comprehension rather than relying on `Series.astype(str)`. The latter has bitten us on CI with newer pandas where a NaN cell slips through as a float and trips `"Cocoa" in cell` with `TypeError: argument of type 'float' is not iterable`. Keep the per-cell `str()`.
 
 ## Schedule
 Monthly via `.github/workflows/pipeline-monthly.yml`. The Pink Sheet is published around the 2nd of each month, so the cron is set to mid-month to be safe.
