@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { CommodityPriceChart } from "@/components/CommodityPriceChart";
+import { EmptyState } from "@/components/EmptyState";
 import { TradeValueChart } from "@/components/TradeValueChart";
 import { supabase } from "@/lib/supabase";
 
@@ -50,16 +50,22 @@ export default async function CommodityPage({
   const trade = (tradeRes.data ?? []) as TradeRow[];
 
   return (
-    <main className="flex flex-1 flex-col px-6 py-12 gap-8 max-w-6xl mx-auto w-full">
-      <header className="flex flex-col gap-2">
-        <Link
-          href="/"
-          className="text-xs uppercase tracking-widest text-neutral-500 hover:text-neutral-300"
-        >
-          ← gh-control-tower
-        </Link>
-        <h1 className="text-3xl font-semibold tracking-tight">{meta.label}</h1>
-        <p className="text-neutral-400 font-mono text-xs">HS {meta.hsCode}</p>
+    <main className="flex flex-col gap-8">
+      <header className="flex flex-col gap-2 pt-2">
+        <p className="text-xs uppercase tracking-widest text-neutral-500">
+          Commodity drill-down
+        </p>
+        <div className="flex items-baseline gap-3 flex-wrap">
+          <h1 className="text-3xl font-semibold tracking-tight">{meta.label}</h1>
+          <span className="text-neutral-500 font-mono text-xs">
+            HS {meta.hsCode}
+          </span>
+        </div>
+        <p className="text-neutral-400 max-w-2xl leading-relaxed">
+          Monthly world price next to Ghana&apos;s monthly import / export
+          value for HS {meta.hsCode}. Use the brush below the price chart to
+          zoom into a specific window.
+        </p>
       </header>
 
       {prices.length > 0 ? (
@@ -67,31 +73,29 @@ export default async function CommodityPage({
           data={prices}
           commodity={meta.label}
           unit={prices.at(-1)?.unit ?? null}
+          defaultRangeYears={5}
+          showBrush
+          height={380}
         />
       ) : (
-        <EmptySection
-          message={`no commodity_prices rows for ${commodity} yet — run tools/fetch_pink_sheet.py.`}
-          error={priceRes.error?.message}
+        <EmptyState
+          title={`${meta.label} prices`}
+          message={`No commodity_prices rows for ${commodity} yet.`}
+          hint="run tools/fetch_pink_sheet.py."
+          error={priceRes.error?.message ?? null}
         />
       )}
 
       {trade.length > 0 ? (
         <TradeValueChart data={trade} title={`${meta.label} — Ghana trade value`} />
       ) : (
-        <EmptySection
-          message={`no trade_flows rows for HS ${meta.hsCode} yet — run tools/fetch_comtrade_monthly.py.`}
-          error={tradeRes.error?.message}
+        <EmptyState
+          title={`${meta.label} trade value`}
+          message={`No trade_flows rows for HS ${meta.hsCode} yet.`}
+          hint="run tools/fetch_comtrade_monthly.py."
+          error={tradeRes.error?.message ?? null}
         />
       )}
     </main>
-  );
-}
-
-function EmptySection({ message, error }: { message: string; error?: string }) {
-  return (
-    <section className="rounded-lg border border-neutral-800 bg-neutral-900/50 px-6 py-5">
-      <p className="text-amber-400 font-mono text-sm">{message}</p>
-      {error && <p className="text-rose-400 font-mono text-xs mt-2">{error}</p>}
-    </section>
   );
 }

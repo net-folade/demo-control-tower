@@ -31,8 +31,9 @@ jobs:
       - name: Refresh commodity prices (World Bank Pink Sheet)
         run: python tools/fetch_pink_sheet.py
 
-      - name: Load GPHA annual port stats (idempotent — picks up CSV updates)
-        run: python tools/load_gpha_port_stats.py
+      - name: Refresh Ghana trade flows (UN Comtrade)
+        run: python tools/fetch_comtrade_monthly.py
 
-      # Wired up in Slice 2
-      # - run: python tools/fetch_comtrade_monthly.py
+      # GPHA annual port stats are loaded manually from the checked-in CSV.
+      # GPHA publishes once per year, so a monthly cron would be wasted minutes.
+      # Re-run `python tools/load_gpha_port_stats.py` when a new bulletin lands.

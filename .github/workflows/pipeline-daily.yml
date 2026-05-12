@@ -17,7 +17,6 @@ jobs:
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-      OPENWEATHER_KEY: ${{ secrets.OPENWEATHER_KEY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -28,9 +27,8 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      # Wired up in Slice 5 / 7
-      # - run: python tools/fetch_weather_ports.py
-      # - run: python tools/fetch_gdelt_disruptions.py
-      # - run: python tools/fetch_bog_fx.py
-      # - run: python tools/prune_retention.py   # rebuild in Slice 5 once weather_obs is in use
-      - run: echo "no daily jobs registered yet"
+      - name: Weather at Tema and Takoradi (Open-Meteo)
+        run: python tools/fetch_weather_ports.py
+
+      - name: Port/logistics news (GDELT 2.0)
+        run: python tools/fetch_gdelt_disruptions.py

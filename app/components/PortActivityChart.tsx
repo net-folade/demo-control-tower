@@ -40,6 +40,8 @@ const compact = new Intl.NumberFormat(undefined, {
   maximumFractionDigits: 1,
 });
 
+const DEFAULT_YEAR_MIN = 2018;
+
 export function PortActivityChart({ rows }: { rows: PortActivityRow[] }) {
   const [metric, setMetric] = useState("vessel_calls");
 
@@ -47,6 +49,7 @@ export function PortActivityChart({ rows }: { rows: PortActivityRow[] }) {
     const byYear = new Map<number, { year: number; TEMA?: number; TAKORADI?: number }>();
     for (const r of rows) {
       if (r.metric !== metric) continue;
+      if (r.year < DEFAULT_YEAR_MIN) continue;
       const entry = byYear.get(r.year) ?? { year: r.year };
       entry[r.port_code] = Number(r.value);
       byYear.set(r.year, entry);
@@ -59,12 +62,16 @@ export function PortActivityChart({ rows }: { rows: PortActivityRow[] }) {
   return (
     <section className="rounded-lg border border-neutral-800 bg-neutral-900/50 px-5 py-4 flex flex-col gap-3 w-full">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <div className="flex flex-col gap-0.5">
+        <div className="flex flex-col gap-1 max-w-2xl">
           <p className="text-xs uppercase tracking-widest text-neutral-500">
             Port activity — Tema vs Takoradi
           </p>
+          <p className="text-sm text-neutral-400 leading-relaxed">
+            Tema carries the container and general-cargo flow; Takoradi is the
+            bulk-commodity port. Switch metric to see the split.
+          </p>
           <p className="text-[10px] text-neutral-600 font-mono">
-            2014–2024 · source: GPHA Annual Statistics
+            2018–2024 · source: GPHA Annual Statistics
           </p>
         </div>
         <div className="flex flex-wrap gap-1">

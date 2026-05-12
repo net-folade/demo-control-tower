@@ -21,6 +21,18 @@ const PortLocationsMap = dynamic(
   },
 );
 
-export function PortLocationsMapSection({ badges }: { badges: PortBadge[] }) {
-  return <PortLocationsMap badges={badges} />;
+type Props = {
+  badges: PortBadge[];
+  selectedPort?: "TEMA" | "TAKORADI" | null;
+  onPortClick?: (port: "TEMA" | "TAKORADI") => void;
+};
+
+export function PortLocationsMapSection({ badges, selectedPort, onPortClick }: Props) {
+  return (
+    <PortLocationsMap
+      badges={badges}
+      selectedPort={selectedPort}
+      onPortClick={onPortClick}
+    />
+  );
 }

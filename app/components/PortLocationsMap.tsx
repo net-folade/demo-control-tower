@@ -41,7 +41,13 @@ function badgeIcon(count: number): L.DivIcon {
   });
 }
 
-export function PortLocationsMap({ badges }: { badges: PortBadge[] }) {
+type MapProps = {
+  badges: PortBadge[];
+  selectedPort?: "TEMA" | "TAKORADI" | null;
+  onPortClick?: (port: "TEMA" | "TAKORADI") => void;
+};
+
+export function PortLocationsMap({ badges, selectedPort, onPortClick }: MapProps) {
   return (
     <section className="rounded-lg border border-neutral-800 bg-neutral-900/50 px-5 py-4 flex flex-col gap-3 w-full">
       <div className="flex items-baseline justify-between">
@@ -66,18 +72,24 @@ export function PortLocationsMap({ badges }: { badges: PortBadge[] }) {
           {badges.map((b) => {
             const coords = PORT_COORDS[b.port_code];
             const hasAlerts = b.alert_count > 0;
+            const isSelected = selectedPort === b.port_code;
             const ringColor = hasAlerts ? "#f43f5e" : "#34d399";
             return (
               <CircleMarker
                 key={b.port_code}
                 center={[coords.lat, coords.lng]}
-                radius={10}
+                radius={isSelected ? 14 : 10}
                 pathOptions={{
                   color: ringColor,
                   fillColor: ringColor,
-                  fillOpacity: 0.7,
-                  weight: 2,
+                  fillOpacity: isSelected ? 0.9 : 0.7,
+                  weight: isSelected ? 3 : 2,
                 }}
+                eventHandlers={
+                  onPortClick
+                    ? { click: () => onPortClick(b.port_code) }
+                    : undefined
+                }
               >
                 <Popup>
                   <div className="text-xs leading-tight">
